@@ -22,14 +22,15 @@ const STREETS_API_URL =
 const STREETS_RESOURCE_ID =
     import.meta.env.VITE_STREETS_RESOURCE_ID ||
     "9ad3862c-8391-4b2f-84a4-2d4c68625f4b";
-const ZAPIER_WEBHOOK_URL =
-    import.meta.env.VITE_ZAPIER_WEBHOOK_URL || "YOUR_ZAPIER_WEBHOOK_URL_HERE"; // Replace default or ensure it's set in .env!
 
-if (ZAPIER_WEBHOOK_URL === "YOUR_ZAPIER_WEBHOOK_URL_HERE") {
-    console.warn(
-        "Zapier Webhook URL is not configured in environment variables!"
-    );
-}
+// const ZAPIER_WEBHOOK_URL =
+//     import.meta.env.VITE_ZAPIER_WEBHOOK_URL || "YOUR_ZAPIER_WEBHOOK_URL_HERE"; // Replace default or ensure it's set in .env!
+
+// if (ZAPIER_WEBHOOK_URL === "YOUR_ZAPIER_WEBHOOK_URL_HERE") {
+//     console.warn(
+//         "Zapier Webhook URL is not configured in environment variables!"
+//     );
+// }
 
 // --- Axios Instance ---
 const apiClient = axios.create({
@@ -217,65 +218,62 @@ export const fetchStreets = async (
 // --- Data Submission ---
 
 /** Define a type for a successful Zapier response */
-interface ZapierSuccessResponse {
-    status: string;
-    // Add other expected fields from Zapier if known
-    [key: string]: unknown; // Use unknown instead of any
+interface SubmitSuccessResponse {
+    success: boolean;
+    // Include any other data your function might return, e.g., from Zapier
+    zapierData?: any;
 }
-
 /**
  * Posts validated patient data to a Zapier webhook.
  * @param data The validated patient form data conforming to PatientFormData schema.
  * @returns Promise<ZapierSuccessResponse> The success response data from Zapier.
  * @throws {Error} Throws an error if the submission fails or Zapier indicates failure.
  */
+
 export const postPatientData = async (
     data: PatientFormData
-): Promise<ZapierSuccessResponse> => {
-    console.log("Submitting data to Zapier:", data); // Keep development logging
+): Promise<SubmitSuccessResponse> => {
+    // Updated Return Type
+    console.log("Submitting data to backend function:", data);
+
+    // The path to your new serverless function
+    const FUNCTION_URL = "/api/submit-zapier"; // Relative path works with Vercel
+
     try {
-        const response = await apiClient.post<ZapierSuccessResponse>(
-            ZAPIER_WEBHOOK_URL,
+        // Use your existing apiClient or basic axios/fetch
+        // Change the expected response type to SubmitSuccessResponse
+        const response = await apiClient.post<SubmitSuccessResponse>(
+            FUNCTION_URL,
             data
         );
 
-        console.log("Zapier response:", response.data);
+        console.log("Backend function response:", response.data);
 
-        // Check Zapier's response structure - adjust based on actual success indication
-        // Common pattern: Zapier returns { status: 'success', ... }
-        if (response.data && response.data.status === "success") {
-            return response.data; // Return success payload from Zapier
+        // Check the 'success' field from YOUR function's response
+        if (response.data && response.data.success === true) {
+            return response.data;
         } else {
-            // If Zapier didn't return a clear success status, treat as potential failure
-            console.warn(
-                "Zapier hook response did not indicate clear success:",
-                response.data
-            );
+            // If your function indicated failure
             throw new Error(
-                `Zapier submission may have failed: ${JSON.stringify(
-                    response.data
-                )}`
+                `Backend function failed: ${JSON.stringify(response.data)}`
             );
         }
     } catch (error) {
-        console.error("Error submitting data to Zapier:", error);
-        // Provide more context on axios errors if possible
+        console.error("Error submitting data to backend function:", error);
         if (error instanceof AxiosError) {
             console.error(
                 "Axios error details:",
                 error.response?.data || error.message
             );
-            // Throw a more specific error or the original AxiosError
             throw new Error(
                 `Failed to submit data: ${
-                    error.response?.data?.message || error.message
+                    error.response?.data?.error || error.message
                 }`
             );
         }
-        // Re-throw generic error or the original error
         throw error instanceof Error
             ? error
-            : new Error("Failed to submit data to Zapier");
+            : new Error("Failed to submit data via backend function");
     }
 };
 
