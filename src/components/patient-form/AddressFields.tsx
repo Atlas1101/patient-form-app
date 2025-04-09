@@ -17,7 +17,7 @@ interface AddressFieldsProps {
 
 // src/components/PatientForm/AddressFields.tsx
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { UseFormReturn, FieldArrayWithId } from "react-hook-form";
 import { toast } from "sonner"; // Use sonner
 import useDebounce from "@/lib/utils/UseDebounce"; // Assuming path

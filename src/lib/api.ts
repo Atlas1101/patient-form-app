@@ -221,7 +221,7 @@ export const fetchStreets = async (
 interface SubmitSuccessResponse {
     success: boolean;
     // Include any other data your function might return, e.g., from Zapier
-    zapierData?: any;
+    zapierData?: unknown;
 }
 /**
  * Posts validated patient data to a Zapier webhook.

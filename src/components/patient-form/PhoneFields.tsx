@@ -1,5 +1,4 @@
 // src/components/PatientForm/PhoneFields.tsx
-import React from "react";
 import { UseFormReturn, FieldArrayWithId } from "react-hook-form"; // Import necessary types
 import { PatientFormData } from "@/lib/schema"; // Import types
 

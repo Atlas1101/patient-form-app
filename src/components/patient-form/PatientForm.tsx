@@ -1,7 +1,7 @@
 // src/components/PatientForm.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
     useForm,
     useFieldArray,
@@ -229,33 +229,30 @@ export function PatientForm() {
         const submissionToastId = toast.loading("Submitting...");
 
         try {
-            const result = await postPatientData(data);
-            if (result.success) {
-                toast.success("Success!", {
-                    id: submissionToastId,
-                    description: "Patient information submitted.",
-                });
-                form.reset(); // Reset form to RHF defaultValues
+            // postPatientData will either return SubmitSuccessResponse OR throw an error
+            await postPatientData(data);
 
-                // Reset local component state as well
-                setCityQuery("");
-                setCities([]);
-                setCityLoading(false);
-                setIsCityPopoverOpen(false);
-                // No need to reset AddressFields internal state here as it's passed down
-            } else {
-                // Use error message from API if available
-                throw new Error(
-                    result.error?.message ||
-                        "Submission failed due to an unknown server error."
-                );
-            }
+            // If we get here, it means result.success was true (otherwise postPatientData threw)
+            toast.success("Success!", {
+                id: submissionToastId,
+                description: "Patient information submitted.",
+            });
+            form.reset(); // Reset form to RHF defaultValues
+
+            // Reset local component state as well
+            setCityQuery("");
+            setCities([]);
+            setCityLoading(false);
+            setIsCityPopoverOpen(false);
+
+            // The 'else' block is removed
         } catch (error: unknown) {
+            // Errors from postPatientData (network, serverless function, etc.) are caught here
             console.error("Submission Handler Error:", error);
             const message =
                 error instanceof Error
-                    ? error.message
-                    : "Could not submit form. Please check your connection or try again.";
+                    ? error.message // Use the error message thrown by postPatientData or Axios
+                    : "Could not submit form. Please check connection or server logs."; // Generic fallback
             toast.error("Submission Error", {
                 id: submissionToastId,
                 description: message,
